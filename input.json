@@ -1,0 +1,10 @@
+{
+  "font": "SS Pretzel",
+  "unit": 8,
+  "data": [
+    {
+      "text": "you and me will be lying side by side",
+      "step": [2, 4, 4, 2, 4, 6, 4, 6, 4]
+    }
+  ]
+}
