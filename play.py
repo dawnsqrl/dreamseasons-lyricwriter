@@ -1,4 +1,4 @@
-import json
+from json import loads
 from random import uniform, seed
 
 from manim import *
@@ -21,24 +21,24 @@ def pixel_pos(x, y):
 class LyricWriter(Scene):
     def __init__(self, path):
         super().__init__()
-        self.camera.background_color = BLACK
         with open(path, 'r') as file:
-            data = json.loads(file.read())
+            data = loads(file.read())
             self.font = data['font']
             self.time_unit = 1 / data['unit']
             self.data = data['data']
         self.in_time = 0.5
         self.in_shift = DOWN / 2
         self.out_time = 2
-        self.space_width = 40  # pixel
+        self.word_spacing = 40  # pixel
         self.noise_cap = 0.1  # unit
-        self.correction_factor = 0.99  # default = 1
+        self.correction_factor = 0.98  # default = 1
 
     def construct(self):
+        sign = 1
         for sentence in self.data:
             self.next_section(name=sentence['text'])
             word_objects = []
-            animations = []
+            successions = []
             elapsed_time = 0
             assert len(words := sentence['text'].split()) \
                    == len(steps := sentence['step'])
@@ -54,17 +54,18 @@ class LyricWriter(Scene):
                 else:
                     word_object = word_object.next_to(
                         word_objects[-1], RIGHT, aligned_edge=ORIGIN,
-                        buff=pixel_x(self.space_width)
+                        buff=pixel_x(self.word_spacing)
                     )
                 word_objects.append(word_object)
-                animations.append(Succession(
+                successions.append(Succession(
                     Wait(elapsed_time),
                     FadeIn(word_object, shift=self.in_shift, run_time=self.in_time)
                 ))
                 elapsed_time += step * self.time_unit * self.correction_factor
             for word_object in word_objects:
-                word_object.shift(UP * self.noise_cap * (uniform(0, 1) * 2 - 1))
-            self.play(animations)
+                word_object.shift(UP * self.noise_cap * sign * uniform(0, 1))
+                sign *= -1
+            self.play(successions)
             self.wait(sentence['step'][-1] * self.time_unit * self.correction_factor)
             self.play(FadeOut(*word_objects, run_time=self.out_time))
 
@@ -76,5 +77,5 @@ if __name__ == '__main__':
         'transparent': True,
         'save_sections': True
     }):
-        scene = LyricWriter('input.json')
+        scene = LyricWriter('input-all.json')
         scene.render()
